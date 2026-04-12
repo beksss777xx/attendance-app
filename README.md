@@ -18,9 +18,10 @@
 
  ## Description:
 
+
 What is the purpose of the project:
 
-*This is an application with which you can create your own class at an educational institution and mark the attendance of students in the class at an educational institution.*
+*Attendly is an application with which you can create your own class at an educational institution and mark the attendance of students in the class at an educational institution.*
 
 ## Features:
 - Class Management:
