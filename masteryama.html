@@ -1,0 +1,1165 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<title>МастерЯма — симулятор кривого мастера</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;700&family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1a1a2e;
+  --bg2:#241f33;
+  --yellow:#f5d020;
+  --yellow-dark:#c9a818;
+  --red:#c0392b;
+  --paper:#f0ece4;
+  --paper-dark:#d8d2c4;
+  --ink:#2b2622;
+  --green:#5fa55a;
+  --neon:#ff3a55;
+  --shadow: 0 4px 0 rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--paper);font-family:'VT323',monospace;font-size:18px;overflow-x:hidden}
+body{
+  min-height:100vh;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 2px, transparent 2px 4px),
+    radial-gradient(ellipse at top, #2a2540 0%, var(--bg) 60%);
+}
+.pixel{font-family:'Press Start 2P',monospace;letter-spacing:1px}
+.hand{font-family:'Caveat',cursive;font-weight:700}
+
+/* ---------- LAYOUT ---------- */
+#app{max-width:1200px;margin:0 auto;padding:10px}
+header.kiosk{
+  background:var(--yellow);
+  color:var(--ink);
+  border:4px solid var(--ink);
+  border-radius:6px 6px 0 0;
+  padding:10px 16px;
+  display:flex;justify-content:space-between;align-items:center;
+  gap:10px;flex-wrap:wrap;
+  box-shadow: var(--shadow);
+  position:relative;
+}
+header.kiosk::before{
+  content:'';position:absolute;left:8px;right:8px;top:4px;height:6px;
+  background:repeating-linear-gradient(90deg,var(--red) 0 14px,var(--ink) 14px 16px);
+  border-radius:3px;
+}
+.logo{
+  font-family:'Press Start 2P',monospace;font-size:20px;
+  text-shadow: 2px 2px 0 var(--red);
+  animation: flicker 5s infinite;
+}
+@keyframes flicker{
+  0%,18%,21%,55%,57%,100%{opacity:1}
+  19%,20%,56%{opacity:.4}
+}
+.tagline{font-family:'Caveat',cursive;font-size:22px;color:var(--ink);line-height:1}
+
+main{
+  display:grid;
+  grid-template-columns: 1.05fr 1.2fr 1fr;
+  gap:10px;
+  padding:10px;
+  background:var(--paper-dark);
+  border:4px solid var(--ink);
+  border-top:none;
+  min-height:560px;
+}
+@media (max-width: 900px){
+  main{grid-template-columns:1fr}
+}
+
+.panel{
+  background:var(--paper);
+  color:var(--ink);
+  border:3px solid var(--ink);
+  border-radius:4px;
+  padding:10px;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.25);
+  position:relative;
+}
+.panel h3{
+  font-family:'Press Start 2P',monospace;font-size:11px;margin:0 0 8px;
+  background:var(--ink);color:var(--yellow);padding:6px 8px;
+  display:inline-block;border-radius:3px;
+  letter-spacing:1px;
+}
+
+/* ---------- WORKSHOP ---------- */
+#workshop .phone{
+  width:100%;height:170px;
+  background:linear-gradient(180deg,#0e0e1a 0%,#1a1a2e 100%);
+  border:4px solid #444;border-radius:14px;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  margin-bottom:10px;
+  box-shadow: inset 0 -4px 0 rgba(255,255,255,.05);
+}
+#workshop .phone::before{
+  content:'';position:absolute;top:8px;left:50%;width:50px;height:6px;
+  background:#000;border-radius:3px;transform:translateX(-50%);
+}
+#workshop .screen{
+  width:84%;height:78%;
+  background:#0a0a14;border:2px solid #222;border-radius:8px;
+  position:relative;overflow:hidden;
+  box-shadow: inset 0 0 30px rgba(255,58,85,.3);
+}
+.crack{
+  position:absolute;inset:0;pointer-events:none;
+  background:
+    linear-gradient(120deg,transparent 49%,#fff5 49.5%,transparent 50%),
+    linear-gradient(170deg,transparent 49%,#fff3 49.5%,transparent 50%),
+    linear-gradient(40deg,transparent 49%,#fff4 49.5%,transparent 50%);
+  opacity:0;transition:opacity .3s;
+}
+.crack.show{opacity:1}
+.diag{
+  background:repeating-linear-gradient(45deg,#fff8e7 0 8px,#fff 8px 16px);
+  border:2px dashed var(--ink);padding:8px;border-radius:4px;
+  font-family:'Caveat',cursive;font-size:20px;line-height:1.1;
+  min-height:54px;
+}
+.diag b{color:var(--red)}
+.diag .stamp{
+  display:inline-block;border:2px solid var(--red);color:var(--red);
+  padding:2px 6px;transform:rotate(-4deg);font-family:'Press Start 2P',monospace;font-size:9px;margin-right:4px;
+  background:#fff;
+}
+
+#screws{
+  display:flex;gap:8px;justify-content:space-around;
+  background:#bdb198;border:2px solid var(--ink);border-radius:4px;padding:8px;margin-top:8px;
+  min-height:54px;align-items:center;
+}
+.screw{
+  width:36px;height:36px;border-radius:50%;
+  background:radial-gradient(circle at 35% 35%, #ddd 0%, #888 60%, #444 100%);
+  border:2px solid var(--ink);cursor:pointer;
+  position:relative;
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Press Start 2P';font-size:9px;color:transparent;
+  transition: transform .15s, background .2s;
+}
+.screw::before{
+  content:'';position:absolute;width:60%;height:3px;background:#222;border-radius:2px;
+  transform:rotate(45deg);
+}
+.screw.done{background:radial-gradient(circle at 35% 35%, #6dc46b 0%, #3a9038 100%);transform:scale(.9);color:#fff}
+.screw.done::before{display:none}
+.screw.bad{background:radial-gradient(circle at 35% 35%, #f57878 0%, #c12 100%);animation: shake .3s}
+@keyframes shake{0%,100%{transform:translateX(0)}25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+
+/* ---------- CUSTOMER ---------- */
+#stage{
+  background:
+    linear-gradient(180deg,#3b2f24 0%,#5a4836 60%, #6b5640 100%);
+  color:var(--paper);
+  padding:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:flex-end;
+  min-height:340px;position:relative;overflow:hidden;
+}
+#stage::before{
+  content:'';position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(0,0,0,.05) 0 4px,transparent 4px 8px);
+  pointer-events:none;
+}
+#stage h3{position:absolute;top:8px;left:8px;margin:0;z-index:2}
+.bubble{
+  position:relative;background:var(--paper);color:var(--ink);
+  font-family:'Caveat',cursive;font-size:22px;line-height:1.1;
+  padding:10px 14px;border:3px solid var(--ink);border-radius:14px;
+  margin:14px 8px 6px;max-width:96%;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.3);
+  min-height:60px;z-index:2;
+}
+.bubble::after{
+  content:'';position:absolute;bottom:-12px;left:30px;
+  width:0;height:0;border:10px solid transparent;border-top-color:var(--paper);border-bottom:0;
+  filter: drop-shadow(0 3px 0 var(--ink));
+}
+.cust{
+  font-size:90px;line-height:1;margin-bottom:8px;z-index:2;
+  filter: drop-shadow(0 4px 0 rgba(0,0,0,.4));
+  transition: transform .8s cubic-bezier(.4,1.6,.5,1), filter .3s;
+}
+.cust.enter{transform:translateX(120%)}
+.cust.angry{animation: wobble .4s 3, redshift .4s 3}
+@keyframes wobble{0%,100%{transform:translateX(0)}25%{transform:translateX(-12px) rotate(-4deg)}75%{transform:translateX(12px) rotate(4deg)}}
+@keyframes redshift{50%{filter: drop-shadow(0 4px 0 rgba(0,0,0,.4)) hue-rotate(-30deg) brightness(1.2) saturate(1.5)}}
+.nameTag{
+  font-family:'Press Start 2P';font-size:10px;background:var(--yellow);color:var(--ink);
+  padding:4px 8px;border:2px solid var(--ink);border-radius:3px;
+  margin-bottom:8px;z-index:2;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.4);
+}
+
+/* ---------- ACTIONS / STATS ---------- */
+#side{display:flex;flex-direction:column;gap:8px}
+.stat-row{display:flex;justify-content:space-between;align-items:center;margin:3px 0;font-size:18px}
+.stat-row b{font-family:'Press Start 2P';font-size:9px}
+.bar{
+  position:relative;height:14px;background:#ddd;border:2px solid var(--ink);border-radius:8px;overflow:hidden;
+}
+.bar .fill{
+  position:absolute;left:0;top:0;bottom:0;background:var(--green);
+  transition:width .6s, background .6s;
+}
+.coins{color:var(--green);font-weight:bold}
+.debt{color:var(--red);font-weight:bold}
+
+.btnrow{display:flex;flex-direction:column;gap:6px}
+button.act{
+  font-family:'Press Start 2P';font-size:9px;letter-spacing:0;
+  padding:9px;border:3px solid var(--ink);border-radius:4px;
+  background:var(--paper);color:var(--ink);cursor:pointer;
+  text-align:left;line-height:1.35;
+  box-shadow: 3px 3px 0 rgba(0,0,0,.3);
+  transition: transform .08s, box-shadow .08s, filter .15s;
+}
+button.act:hover{filter:brightness(1.07)}
+button.act:active{transform:translate(2px,2px);box-shadow: 1px 1px 0 rgba(0,0,0,.3)}
+button.act:disabled{opacity:.4;cursor:not-allowed}
+button.act.honest{background:#cfead0}
+button.act.markup{background:#fff3a3}
+button.act.fake{background:#ffd1a3}
+button.act.hard{background:#ff9b9b}
+button.act.theft{background:#222;color:#fff;border-color:#000}
+button.act .price{float:right;color:var(--red);font-size:10px}
+button.act.theft .price{color:#ffb}
+
+/* ---------- TICKER ---------- */
+#ticker{
+  background:var(--ink);color:var(--yellow);
+  border:4px solid var(--ink);border-top:none;border-radius:0 0 6px 6px;
+  font-family:'VT323',monospace;font-size:18px;
+  padding:6px 0;overflow:hidden;white-space:nowrap;position:relative;
+}
+#ticker .tape{display:inline-block;padding-left:100%;animation: ticker 60s linear infinite}
+@keyframes ticker{from{transform:translateX(0)}to{transform:translateX(-100%)}}
+
+/* ---------- MONEY FX ---------- */
+.fx-money{
+  position:fixed;font-family:'Press Start 2P';font-size:20px;color:var(--green);
+  text-shadow:2px 2px 0 var(--ink);pointer-events:none;z-index:50;
+  animation: flyup 1.4s ease-out forwards;
+}
+.fx-money.neg{color:var(--neon)}
+@keyframes flyup{
+  from{transform:translateY(0);opacity:1}
+  to{transform:translateY(-120px);opacity:0}
+}
+
+/* ---------- MODALS ---------- */
+.overlay{
+  position:fixed;inset:0;background:rgba(10,10,20,.85);z-index:100;
+  display:flex;align-items:center;justify-content:center;padding:16px;
+}
+.overlay.hidden{display:none}
+.modal{
+  background:var(--paper);color:var(--ink);
+  border:4px solid var(--ink);border-radius:6px;
+  padding:18px;max-width:560px;width:100%;
+  box-shadow: 6px 6px 0 var(--red);
+  font-family:'VT323',monospace;font-size:20px;line-height:1.2;
+  max-height:92vh;overflow-y:auto;
+}
+.modal h2{font-family:'Press Start 2P';font-size:16px;margin:0 0 12px;color:var(--red);line-height:1.3}
+.modal p{margin:6px 0}
+.modal .row{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.modal button{
+  font-family:'Press Start 2P';font-size:10px;padding:10px 12px;border:3px solid var(--ink);
+  background:var(--yellow);cursor:pointer;border-radius:4px;
+  box-shadow: 2px 2px 0 var(--ink);color:var(--ink);
+}
+.modal button:hover{filter:brightness(1.05)}
+.modal button.bad{background:var(--red);color:#fff}
+.modal button.good{background:#cfead0}
+
+.headline{
+  background:var(--paper);color:var(--ink);
+  border:3px double var(--ink);
+  padding:12px;font-family:'Press Start 2P';font-size:10px;line-height:1.5;
+  margin:8px 0;
+  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,.04) 0 2px, transparent 2px 4px);
+}
+.headline .ttl{font-size:14px;color:var(--red);display:block;margin-bottom:6px;line-height:1.3}
+
+.upg{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:6px;border:2px dashed var(--ink);margin:4px 0;background:#fff8e0}
+
+.suspicion{
+  position:absolute;top:8px;right:8px;
+  background:var(--ink);color:var(--neon);font-family:'Press Start 2P';font-size:9px;
+  padding:4px 6px;border-radius:3px;z-index:3;
+  box-shadow: 2px 2px 0 rgba(0,0,0,.4);
+}
+.tip{font-family:'Caveat',cursive;font-size:18px;color:#666;margin-top:4px;line-height:1.1}
+
+#intro .modal{max-width:600px}
+#intro h2{font-size:20px}
+.btnSmall{
+  font-family:'Press Start 2P',monospace;font-size:9px;padding:6px 8px;border:2px solid var(--ink);
+  background:var(--yellow);cursor:pointer;border-radius:3px;color:var(--ink);
+  margin-left:4px;box-shadow:2px 2px 0 var(--ink);
+}
+.btnSmall:hover{filter:brightness(1.05)}
+.flag{display:inline-block;background:var(--red);color:#fff;padding:2px 6px;font-family:'Press Start 2P';font-size:9px;margin-left:6px;border-radius:3px}
+</style>
+</head>
+<body>
+<div id="app">
+  <header class="kiosk">
+    <div>
+      <div class="logo">МАСТЕРЯМА</div>
+      <div class="tagline">— ремонт всего, гарантия пока выходишь</div>
+    </div>
+    <div style="text-align:right">
+      <div class="pixel" style="font-size:9px;color:var(--ink)">ТЦ "Космос", павильон 47Б</div>
+      <div style="margin-top:6px">
+        <button class="btnSmall" id="shopBtn">ЛАВКА АПГРЕЙДОВ</button>
+        <button class="btnSmall" id="resetBtn" title="Сбросить сохранение">RESET</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel" id="workshop">
+      <h3>ВЕРСТАК</h3>
+      <div class="phone">
+        <div class="screen"><div class="crack" id="crack"></div></div>
+      </div>
+      <div class="diag" id="diag">— Клиента нет —</div>
+      <div id="screws"></div>
+      <div class="tip" id="screwTip">Открой телефон: жми винты по номерам 1→2→3→4→5.</div>
+    </section>
+
+    <section class="panel" id="stage">
+      <h3>ПРИЛАВОК</h3>
+      <div class="suspicion" id="susTag" style="display:none"></div>
+      <div class="cust enter" id="custSprite">🚪</div>
+      <div class="nameTag" id="custName">— ждём клиента —</div>
+      <div class="bubble" id="bubble">Дверь скрипит. За окном — мокрый ТЦ и реклама микрозаймов.</div>
+    </section>
+
+    <aside class="panel" id="side">
+      <h3>СТАТИСТИКА</h3>
+      <div class="stat-row"><b>Касса</b><span class="coins" id="cash">₽2 000</span></div>
+      <div class="stat-row"><b>Долг</b><span class="debt" id="debt">₽15 000</span></div>
+      <div class="stat-row"><b>День</b><span id="day">1 / неделя 1</span></div>
+      <div class="stat-row"><b>Клиентов</b><span id="served">0</span></div>
+      <div class="stat-row"><b>Разводов</b><span id="scams">0</span></div>
+      <div style="margin:6px 0">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <b style="font-family:'Press Start 2P';font-size:9px">Репутация</b><span id="repNum">50</span>
+        </div>
+        <div class="bar"><div class="fill" id="repFill" style="width:50%"></div></div>
+      </div>
+      <h3 style="margin-top:6px">ДЕЙСТВИЯ</h3>
+      <div class="btnrow" id="actions"></div>
+      <div class="tip">Чем умнее клиент — тем рискованнее накручивать.</div>
+    </aside>
+  </main>
+
+  <div id="ticker"><div class="tape" id="tape">★☆☆☆☆ Загружаем отзывы…</div></div>
+</div>
+
+<!-- INTRO -->
+<div class="overlay" id="intro">
+  <div class="modal">
+    <h2>МАСТЕРЯМА — что это вообще такое</h2>
+    <p>Ты — мастер по ремонту телефонов в кривом ларьке ТЦ «Космос».</p>
+    <p>В кармане <b>₽2 000</b>. На шее <b>долг ₽15 000</b>. Аренда <b>₽3 000 в неделю</b>.</p>
+    <p>Каждый клиент — выбор: чинить честно или развести. Слишком много разводов — отдыхаешь в обезьяннике. Слишком честно — отдыхаешь под мостом.</p>
+    <p class="hand" style="font-size:24px;color:var(--red);margin-top:8px">«Это редкая поломка. В СНГ только мы умеем такое чинить.»</p>
+    <div class="row">
+      <button class="good" id="startBtn">НАЧАТЬ СМЕНУ</button>
+      <button id="continueBtn" style="display:none">ПРОДОЛЖИТЬ</button>
+    </div>
+  </div>
+</div>
+
+<!-- OUTCOME -->
+<div class="overlay hidden" id="outcome">
+  <div class="modal">
+    <h2 id="outTitle">—</h2>
+    <div id="outBody"></div>
+    <div class="row"><button class="good" id="outNext">ДАЛЬШЕ</button></div>
+  </div>
+</div>
+
+<!-- EVENT -->
+<div class="overlay hidden" id="event">
+  <div class="modal">
+    <h2 id="evTitle">—</h2>
+    <div id="evBody"></div>
+    <div class="row" id="evChoices"></div>
+  </div>
+</div>
+
+<!-- SHOP -->
+<div class="overlay hidden" id="shop">
+  <div class="modal">
+    <h2>ЛАВКА АПГРЕЙДОВ</h2>
+    <p>Вкладывайся в ларёк — клиенты охотнее верят солидному мастеру.</p>
+    <div id="upgList"></div>
+    <div class="row"><button id="shopClose">ЗАКРЫТЬ</button></div>
+  </div>
+</div>
+
+<!-- ENDING -->
+<div class="overlay hidden" id="ending">
+  <div class="modal">
+    <h2 id="endTitle">—</h2>
+    <div class="headline" id="endLine"></div>
+    <div id="endBody"></div>
+    <div class="row"><button class="bad" id="endRestart">НАЧАТЬ ЗАНОВО</button></div>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   МАСТЕРЯМА — game logic
+   ============================================================ */
+
+const SAVE_KEY = 'masteryama_v1';
+
+// ---------- DATA ----------
+const PROBLEMS = [
+  { id:'screen',  name:'Трещина на стекле',         cost:400,  honest:900,  line:'Уронил, экран в трещинах. Работает, только страшно.' },
+  { id:'battery', name:'Замена аккумулятора',        cost:600,  honest:1300, line:'Держит час и выключается. Надо менять, наверное.' },
+  { id:'port',    name:'Разъём зарядки',             cost:300,  honest:800,  line:'Не заряжается. Кабель шевелю — иногда оживает.' },
+  { id:'speaker', name:'Хрипит динамик',             cost:200,  honest:600,  line:'Звонят — слышу хрип. Музыку слушать не могу.' },
+  { id:'water',   name:'Залит водой',                cost:1500, honest:3200, line:'Уронил в унитаз. Достал. Не включается.' },
+  { id:'camera',  name:'Не работает камера',         cost:700,  honest:1500, line:'Камера не открывается. Селфи не делаются.' },
+  { id:'mic',     name:'Тихий микрофон',             cost:250,  honest:700,  line:'Меня никто не слышит на звонках.' },
+  { id:'reboot',  name:'Софт-глюк (перезагрузка)',   cost:0,    honest:300,  line:'Завис намертво. Кнопки не нажимаются.' },
+  { id:'sensor',  name:'Не отвечает сенсор',         cost:900,  honest:1900, line:'Тыкаю — не реагирует. Полоса посередине мёртвая.' },
+  { id:'volbtn',  name:'Залипает кнопка громкости',  cost:150,  honest:450,  line:'Громкость не убавляется, всё орёт на полную.' },
+  { id:'faceid',  name:'Не работает Face ID',        cost:1200, honest:2400, line:'Лицо не узнаёт. Пишет «попробуйте позже».' },
+  { id:'display', name:'Полная замена дисплея',      cost:1800, honest:3700, line:'Экран чёрный, не светится вообще.' },
+];
+
+const CUSTOMERS = [
+  { id:'baba',    name:'Бабушка Зинаида',     emoji:'👵', trust:0.95, wallet:1700, susMul:0.25, talk:[
+    'Сынок, телефончик-то мой совсем плох…',
+    'Внук подарил, я ничего в этом не понимаю.',
+    'Только не очень дорого, у меня пенсия.'
+  ]},
+  { id:'student', name:'Студент Колян',       emoji:'🎓', trust:0.4,  wallet:1300, susMul:1.4, broke:true, talk:[
+    'Брат, реально только это, не разводи.',
+    'Я в тиктоках видел — такое за пятихатку чинят.',
+  ]},
+  { id:'biz',     name:'Бизнесмен Артур',     emoji:'💼', trust:0.55, wallet:9000, susMul:0.7, fast:true, talk:[
+    'Быстро. Через час встреча. Цена не важна.',
+    'Только без вот этого «зайдите завтра».',
+  ]},
+  { id:'blogger', name:'Блогер Влада',        emoji:'📸', trust:0.6,  wallet:3500, susMul:1.6, secretCam:true, talk:[
+    'Снимаю обзор сервисов в районе!',
+    'Камера выключена, разумеется. Ха-ха.',
+  ]},
+  { id:'cop',     name:'Мент вне формы',      emoji:'👮', trust:0.5,  wallet:2800, susMul:1.5, isCop:true, talk:[
+    'Просто почини. И чек дай нормальный.',
+    'А то у меня тут… связи.',
+  ]},
+  { id:'regular', name:'Постоянный клиент',   emoji:'🧔', trust:0.85, wallet:2400, susMul:0.6, regular:true, talk:[
+    'Опять к вам. В прошлый раз — порядок.',
+    'Жена сказала: «больше никуда не ходи».',
+  ]},
+  { id:'kid',     name:'Школьник Тёма',       emoji:'🧒', trust:0.95, wallet:700,  susMul:0.3, broke:true, talk:[
+    'Дядя, а сколько будет?',
+    'У меня семьсот рублей всего, мама дала.',
+  ]},
+  { id:'dev',     name:'Программист Сева',    emoji:'🤓', trust:0.3,  wallet:4500, susMul:2.2, geek:true, talk:[
+    'Я уже разбирал, вижу — аккум вздулся.',
+    'Только аккум. Ничего лишнего не выдумывай.',
+  ]},
+  { id:'gop',     name:'Гопник Серый',        emoji:'🧢', trust:0.55, wallet:1800, susMul:1.3, aggressive:true, talk:[
+    'Чисто по чесноку чтоб, лады?',
+    'Если что — я тебя запомнил.',
+  ]},
+  { id:'tour',    name:'Туристка Алиса',      emoji:'👜', trust:0.95, wallet:5500, susMul:0.2, talk:[
+    'Hello! My phone is broken… сколько это будет?',
+    'Я проездом, мне срочно надо.',
+  ]},
+  { id:'crypto',  name:'Криптобро Стас',      emoji:'🦧', trust:0.7,  wallet:9500, susMul:0.9, talk:[
+    'Бро, мне срочно. Можно USDT?',
+    'TRX? BNB? Ладно, налом тоже норм.',
+  ]},
+  { id:'mom',     name:'Мама с ребёнком',     emoji:'👩‍🍼', trust:0.7,  wallet:2000, susMul:0.7, sympathy:true, talk:[
+    'Там фотки сына, главное чтобы открылся.',
+    'Если сильно дорого — я не потяну.',
+  ]},
+];
+
+const REVIEWS = [
+  '★☆☆☆☆ Поменяли экран — пропал Face ID',
+  '★☆☆☆☆ Сдал на замену разъёма, отдали с царапиной на крышке',
+  '★★☆☆☆ Чинили день. Через два — та же проблема. Совпадение?',
+  '★☆☆☆☆ "Редкая поломка, в СНГ только мы чиним". 2800₽ за стекло',
+  '★★★★☆ Нормас, бабка довольна, цена терпимая',
+  '★☆☆☆☆ 20 минут объясняли почему не лечится. Рядом починили за 300',
+  '★☆☆☆☆ После их ремонта появилась "вторая проблема", внезапно',
+  '★★★☆☆ Дёшево, запчасть как из мусорки',
+  '★☆☆☆☆ Унёс iPhone 13, забрал 13 mini',
+  '★★★★★ Честный мастер, всё объяснил, мама рекомендует',
+  '★☆☆☆☆ После их ремонта телефон шепчет имена',
+  '★☆☆☆☆ "Сгорел контроллер питания". Гугл сказал — у меня его нет',
+  '★★☆☆☆ Чек напечатали ручкой на салфетке',
+  '★☆☆☆☆ Мастер ушёл за паяльником и пропал на час',
+  '★★★★☆ Был трезв, удивился, пять звёзд',
+  '★☆☆☆☆ Принёс с трещиной — забрал без камеры. Магия',
+  '★★☆☆☆ "Гарантия 14 дней". Через 15 — телефон умер. Совпало',
+  '★☆☆☆☆ Заменили шлейф на кусок провода и термоклей',
+];
+
+const STRATEGIES = {
+  HONEST: { id:'HONEST', label:'ЧЕСТНО',          icon:'✅', cls:'honest', repBase:4,   scamLvl:0, susBase:0   },
+  MARKUP: { id:'MARKUP', label:'НАКРУТИТЬ x2',    icon:'💛', cls:'markup', repBase:-2,  scamLvl:1, susBase:0.4 },
+  FAKE:   { id:'FAKE',   label:'РАЗВОД',          icon:'🔴', cls:'fake',   repBase:-8,  scamLvl:2, susBase:1.0 },
+  HARD:   { id:'HARD',   label:'ЖЁСТКИЙ РАЗВОД',  icon:'💀', cls:'hard',   repBase:-12, scamLvl:3, susBase:1.5 },
+  THEFT:  { id:'THEFT',  label:'КРАЖА',           icon:'⚫', cls:'theft',  repBase:-18, scamLvl:4, susBase:2.1 },
+};
+
+const UPGRADES = [
+  { id:'sign',         name:'Неоновая вывеска',          cost:1500, desc:'Ларёк выглядит чуть менее подозрительно. +5% доверия.' },
+  { id:'diploma',      name:'Поддельные дипломы',        cost:2500, desc:'«Сертификат Apple» из принтера. +10% доверия.' },
+  { id:'tools',        name:'Нормальные инструменты',    cost:3500, desc:'Меньше шансов сорвать шлейф случайно.' },
+  { id:'parts',        name:'Склад нормальных деталей',  cost:5000, desc:'Себестоимость честных ремонтов −20%.' },
+  { id:'fake_reviews', name:'Накрученные отзывы',        cost:4000, desc:'+10 к репутации сразу. Совесть — где-то там.' },
+];
+
+// ---------- STATE ----------
+let state;
+
+function freshState(){
+  return {
+    cash: 2000,
+    debt: 15000,
+    rep: 50,
+    day: 1, week: 1,
+    served: 0, scams: 0,
+    upgrades: {},
+    flags: { copScammed:0, bloggerScammed:0, returnsQueued:0, geekScammed:0, regulars:0 },
+    customer: null,
+    problem: null,
+    extraProblem: null,
+    minigameDone: false,
+    eventQueue: [],
+    over: false,
+  };
+}
+
+function save(){ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(state)); }catch(e){} }
+function load(){ try{ const s=localStorage.getItem(SAVE_KEY); if(s){ state=JSON.parse(s); return true } }catch(e){} return false }
+function wipe(){ try{ localStorage.removeItem(SAVE_KEY); }catch(e){} }
+
+// ---------- UTIL ----------
+const $ = id => document.getElementById(id);
+const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+const fmt = n => '₽' + Math.round(n).toLocaleString('ru-RU').replace(/,/g,' ');
+
+function flyMoney(amount){
+  const el = document.createElement('div');
+  el.className = 'fx-money' + (amount<0 ? ' neg':'');
+  el.textContent = (amount>=0?'+':'') + fmt(amount);
+  el.style.left = (window.innerWidth*0.55 + Math.random()*60 - 30) + 'px';
+  el.style.top  = (window.innerHeight*0.45) + 'px';
+  document.body.appendChild(el);
+  setTimeout(()=>el.remove(), 1400);
+}
+
+// ---------- RENDER ----------
+function render(){
+  $('cash').textContent = fmt(state.cash);
+  $('debt').textContent = fmt(state.debt);
+  $('day').textContent  = `${state.day} / неделя ${state.week}`;
+  $('served').textContent = state.served;
+  $('scams').textContent = state.scams;
+  const r = Math.max(0, Math.min(100, state.rep));
+  $('repNum').textContent = Math.round(r);
+  const fill = $('repFill');
+  fill.style.width = r + '%';
+  fill.style.background = r<30 ? '#c0392b' : (r<60 ? '#e2a738' : '#5fa55a');
+}
+
+function showCustomer(){
+  const c = state.customer, p = state.problem;
+  $('custSprite').textContent = c.emoji;
+  $('custSprite').classList.remove('angry');
+  $('custSprite').classList.add('enter');
+  requestAnimationFrame(()=>{
+    $('custSprite').classList.remove('enter');
+  });
+  $('custName').innerHTML = c.name + ((c.regular && state.flags.regulars>0) ? ' <span class="flag">ПОСТОЯННЫЙ</span>' : '');
+  const lines = [...c.talk, '«' + p.line + '»'];
+  $('bubble').innerHTML = lines.map(l=>`<div>${l}</div>`).join('');
+  const stamp = '<span class="stamp">ДИАГНОЗ</span>';
+  $('diag').innerHTML = `${stamp} <b>${p.name}</b><br>Себестоимость: <b>${fmt(p.cost)}</b> · Честная цена: <b>${fmt(p.honest)}</b>`;
+  $('crack').classList.toggle('show', /screen|display|sensor/.test(p.id));
+  renderActions();
+  $('susTag').style.display = 'none';
+}
+
+function renderActions(){
+  const p = state.problem;
+  const wrap = $('actions');
+  wrap.innerHTML = '';
+  const opts = [
+    { s:STRATEGIES.HONEST, price: p.honest },
+    { s:STRATEGIES.MARKUP, price: p.honest * 2 },
+    { s:STRATEGIES.FAKE,   price: p.honest + 2200 },
+    { s:STRATEGIES.HARD,   price: p.honest * 2 + 1500 },
+    { s:STRATEGIES.THEFT,  price: p.honest + 3500 },
+  ];
+  opts.forEach(o=>{
+    const b = document.createElement('button');
+    b.className = 'act ' + o.s.cls;
+    b.innerHTML = `${o.s.icon} ${o.s.label} <span class="price">${fmt(o.price)}</span>`;
+    b.onclick = ()=> resolveChoice(o.s, o.price);
+    wrap.appendChild(b);
+  });
+}
+
+// ---------- MINIGAME ----------
+function startMinigame(){
+  const wrap = $('screws');
+  wrap.innerHTML = '';
+  const order = [1,2,3,4,5].sort(()=>Math.random()-0.5);
+  let next = 1;
+  $('screwTip').style.color = '';
+  $('screwTip').textContent = 'Откручивай винты ПО ПОРЯДКУ: 1→2→3→4→5';
+  order.forEach(num=>{
+    const s = document.createElement('div');
+    s.className = 'screw';
+    s.dataset.num = num;
+    s.title = '#'+num;
+    // show number faintly so player can read order — pixel font handles it
+    s.style.color = '#222';
+    s.textContent = num;
+    s.onclick = ()=>{
+      if (s.classList.contains('done') || s.classList.contains('bad')) return;
+      if (Number(s.dataset.num) === next){
+        s.classList.add('done');
+        next++;
+        if (next>5){
+          state.minigameDone = true;
+          $('screwTip').textContent = 'Отлично, телефон вскрыт. Время решать.';
+        }
+      } else {
+        if (state.upgrades.tools && Math.random() < 0.5){
+          $('screwTip').textContent = 'Чуть не сорвал — нормальный инструмент спас.';
+          return;
+        }
+        s.classList.add('bad');
+        $('screwTip').textContent = 'Сорвал шлейф. Теперь это твоя проблема.';
+        if (!state.extraProblem){
+          state.extraProblem = { name:'Сорванный шлейф (твоих рук дело)', cost:500 };
+          $('diag').innerHTML += `<br><span class="stamp">ОЙ</span> <b>${state.extraProblem.name}</b> · +${fmt(state.extraProblem.cost)} расхода`;
+        }
+        // allow continue: reset 'next' to keep going
+      }
+    };
+    wrap.appendChild(s);
+  });
+}
+
+// ---------- CHOICE RESOLUTION ----------
+function resolveChoice(strat, price){
+  if (!state.minigameDone){
+    flashTip('Сначала открой телефон (винты по порядку).');
+    return;
+  }
+  const c = state.customer, p = state.problem;
+  let pay = price;
+  let cost = p.cost * (state.upgrades.parts && strat.id==='HONEST' ? 0.8 : 1);
+  if (state.extraProblem) cost += state.extraProblem.cost;
+
+  // Wallet check
+  if (pay > c.wallet){
+    if (c.broke || c.geek){
+      angryCust();
+      state.rep = Math.max(0, state.rep - 4);
+      finishCustomer({
+        title:'🚪 КЛИЕНТ УШЁЛ',
+        body:`<p>${c.name} посмотрел на ценник, фыркнул и ушёл, обещая «рассказать всем».</p>` + summaryBox(0, -4)
+      });
+      return;
+    } else {
+      pay = Math.max(c.wallet, p.cost); // they pay what they have, but at least covers cost-ish
+    }
+  }
+
+  // Suspicion
+  let trustEff = c.trust + (state.upgrades.sign?0.05:0) + (state.upgrades.diploma?0.1:0);
+  trustEff = Math.min(0.99, trustEff);
+  let detectChance = strat.susBase * c.susMul * (1 - trustEff*0.6);
+  if (state.rep < 30) detectChance *= 1.3;
+  if (c.geek && strat.scamLvl>=2) detectChance = 5;
+  if (c.sympathy && strat.id==='THEFT') detectChance = 5;
+
+  $('susTag').style.display = strat.scamLvl>0 ? 'block':'none';
+  $('susTag').textContent = `риск раскрытия: ${Math.min(99, Math.round(detectChance*40))}%`;
+
+  const detected = strat.scamLvl>0 && (Math.random() < detectChance/2.5);
+
+  let title, body;
+  let repDelta = strat.repBase;
+  let gain = pay - cost;
+  let scamCounted = strat.scamLvl>0;
+
+  if (detected){
+    title = '💢 КЛИЕНТ РАСКУСИЛ';
+    repDelta = -Math.abs(strat.repBase) - 8;
+    if (c.aggressive){
+      const lost = Math.min(state.cash + 500, 1500);
+      body = `<p>${c.name} разворачивается, грузит «паяльник в карман», уносит ${fmt(lost)}.</p>`;
+      gain = -lost;
+    } else if (c.isCop){
+      body = `<p>${c.name} тихо улыбается. «Ну-ну. Ждите гостей.»</p>`;
+      state.flags.copScammed++;
+      gain = 0;
+    } else if (c.secretCam){
+      body = `<p>Камера, оказывается, писала. ${c.name} выкладывает рилс «КАК НАС РАЗВОДЯТ В ЛАРЬКАХ».</p>`;
+      state.rep = Math.max(0, state.rep - 18);
+      gain = 0;
+      state.flags.bloggerScammed++;
+    } else if (c.geek){
+      body = `<p>${c.name}: «Я разработчик, я гуглил эту схему. Возвращайте телефон.» Возвращаете и ничего не получаете.</p>`;
+      gain = 0;
+      state.flags.geekScammed++;
+    } else {
+      body = `<p>${c.name} орёт на весь ТЦ. Возвращаете деньги, теряете лицо.</p>`;
+      gain = -200;
+    }
+    angryCust();
+    if (Math.random() < 0.5) state.flags.returnsQueued++;
+  } else {
+    if (strat.id==='HONEST'){
+      title = '✅ ЧЕСТНЫЙ РЕМОНТ';
+      body = `<p>${c.name} платит без сюрпризов. ${pickPraise(c)}</p>`;
+      if (c.regular) state.flags.regulars++;
+      if (!c.regular && Math.random() < 0.15) state.flags.regulars++; // honest can convert into regular
+      if (c.sympathy) repDelta += 2;
+      if (c.isCop) repDelta += 1;
+    } else if (strat.id==='MARKUP'){
+      title = '💛 НАКРУТИЛИ И УШЛИ';
+      body = `<p>${c.name} хмурится, но платит. На лбу — «следующий раз пойду в другое место».</p>`;
+    } else if (strat.id==='FAKE'){
+      title = '🔴 ЛЕГЕНДА О ВТОРОЙ ПОЛОМКЕ';
+      body = `<p>«Кроме этого у вас ещё контроллер питания барахлит. Это редкая проблема, в СНГ только мы чиним.»</p><p>${c.name} верит. ${fmt(pay)} в кассе.</p>`;
+    } else if (strat.id==='HARD'){
+      title = '💀 ПОДМЕНА ДЕТАЛЕЙ';
+      body = `<p>Оригинал — на полку, китайский ноунейм — клиенту. Через две недели — это не ваши проблемы.</p>`;
+      cost *= 0.4; gain = pay - cost;
+      if (Math.random()<0.4) state.flags.returnsQueued++;
+    } else if (strat.id==='THEFT'){
+      title = '⚫ КРАЖА КОМПОНЕНТА';
+      body = `<p>«Этой детали изначально не было, я записал в акте.» — сказали вы себе, пряча модуль в ящик.</p>`;
+      if (Math.random()<0.6) state.flags.returnsQueued++;
+    }
+  }
+
+  state.cash += gain;
+  state.rep = Math.max(0, Math.min(100, state.rep + repDelta));
+  if (scamCounted && !detected) state.scams++;
+  state.served++;
+
+  if (gain !== 0) flyMoney(gain);
+
+  maybeQueueEvent();
+
+  finishCustomer({ title, body: body + summaryBox(gain, repDelta) });
+}
+
+function pickPraise(c){
+  return pick([
+    'Спасибо, мастер! — говорит ' + c.name + '.',
+    c.name + ' даже улыбнулся. Подозрительно.',
+    'Запомнит дорогу обратно.',
+    'Без эмоций. Профессионал.',
+    'Сказал, что друзьям расскажет.',
+  ]);
+}
+
+function summaryBox(money, rep){
+  const repColor = rep>=0 ? 'var(--green)' : 'var(--red)';
+  const moneyColor = money>=0 ? 'var(--green)' : 'var(--red)';
+  return `<div class="headline" style="font-size:11px;margin-top:10px">
+    <span class="ttl">ИТОГ ПРИЁМА</span>
+    Касса: <b style="color:${moneyColor}">${money>=0?'+':''}${fmt(money)}</b><br>
+    Репутация: <b style="color:${repColor}">${rep>=0?'+':''}${rep}</b><br>
+    Долг: <b style="color:var(--red)">${fmt(state.debt)}</b>
+  </div>`;
+}
+
+function angryCust(){
+  $('custSprite').classList.add('angry');
+}
+
+function flashTip(t){
+  $('screwTip').textContent = t;
+  $('screwTip').style.color = 'var(--red)';
+  setTimeout(()=>{ $('screwTip').style.color = ''; }, 1400);
+}
+
+// ---------- CUSTOMER FLOW ----------
+function nextCustomer(){
+  if (state.over) return;
+
+  // weekly rent: every 6 customers
+  if ((state.served>0) && (state.served % 6 === 0) && !state._rentPaid){
+    state._rentPaid = true;
+    state.week++;
+    state.cash -= 3000;
+    showOutcome({
+      title:'📅 КОНЕЦ НЕДЕЛИ',
+      body:`<p>Хозяин ТЦ забрал ₽3 000 за аренду павильона.</p>${state.cash<0?'<p style="color:var(--red)"><b>Касса в минусе. Ещё неделя без денег — выселят.</b></p>':''}` + summaryBox(-3000, 0),
+      after: ()=>{
+        if (checkEndings()) return;
+        actuallyNextCustomer();
+      }
+    });
+    return;
+  }
+  // reset rent flag when served % 6 !== 0 again
+  if (state._rentPaid && state.served % 6 !== 0) state._rentPaid = false;
+
+  state.day++;
+  actuallyNextCustomer();
+}
+
+function actuallyNextCustomer(){
+  if (state.over) return;
+
+  const ev = rollEvent();
+  if (ev){ runEvent(ev); return; }
+
+  let pool = CUSTOMERS.slice();
+  if (state.rep > 75){
+    pool.push(CUSTOMERS.find(c=>c.id==='biz'));
+    pool.push(CUSTOMERS.find(c=>c.id==='crypto'));
+    pool.push(CUSTOMERS.find(c=>c.id==='tour'));
+  }
+  if (state.rep < 30){
+    pool.push(CUSTOMERS.find(c=>c.id==='gop'));
+    pool.push(CUSTOMERS.find(c=>c.id==='student'));
+  }
+  if (state.flags.regulars>0 && Math.random()<0.18) pool.push(CUSTOMERS.find(c=>c.id==='regular'));
+
+  state.customer = pick(pool);
+  state.problem  = pick(PROBLEMS);
+  state.extraProblem = null;
+  state.minigameDone = false;
+  showCustomer();
+  startMinigame();
+  render();
+  save();
+}
+
+function finishCustomer(res){
+  showOutcome({
+    title: res.title,
+    body: res.body,
+    after: ()=>{
+      if (checkEndings()) return;
+      if (state.flags.returnsQueued>0 && Math.random()<0.4){
+        state.flags.returnsQueued--;
+        runEvent('RETURN');
+        return;
+      }
+      nextCustomer();
+    }
+  });
+  save();
+}
+
+// ---------- EVENTS ----------
+function maybeQueueEvent(){
+  if (state.flags.copScammed>0 && Math.random()<0.18) state.eventQueue.push('INSPECTION');
+  if (state.flags.bloggerScammed>0 && Math.random()<0.3) state.eventQueue.push('VIRAL');
+  if (state.scams>5 && Math.random()<0.08) state.eventQueue.push('BROTHER');
+  if (state.rep>70 && state.scams<3 && Math.random()<0.12) state.eventQueue.push('JOURNALIST');
+}
+
+function rollEvent(){
+  if (state.eventQueue.length){
+    return state.eventQueue.shift();
+  }
+  if (Math.random() < 0.07){
+    return pick(['TOOL_BREAK','LUCKY_PART','PETTY_THEFT']);
+  }
+  return null;
+}
+
+const EVENTS = {
+  RETURN: ()=>({
+    title:'📱 КЛИЕНТ ВЕРНУЛСЯ',
+    body:'<p>В дверь ломится тот, кому вы «починили» ранее. Пахнет скандалом.</p>',
+    choices:[
+      { label:'Вернуть деньги', go:()=>{ state.cash -= 1500; state.rep += 2; ev_close('Спокойно. Минус ₽1 500, плюс пару очков совести.'); } },
+      { label:'Послать', go:()=>{ state.rep -= 10; ev_close('Скандал на весь ТЦ. Репутация просела.'); } },
+      { label:'Снова развести: «Это новая поломка»', go:()=>{
+        if (Math.random()<0.5){ state.cash += 1200; state.scams++; ev_close('Ох. Поверил. ₽1 200 в кассу.'); }
+        else { state.rep -= 18; state.flags.returnsQueued++; ev_close('Не поверил. Теперь точно вернётся с другом.'); }
+      }},
+    ]
+  }),
+  INSPECTION: ()=>({
+    title:'👮 ПРОВЕРКА',
+    body:'<p>Мужчина в штатском кладёт корочку на прилавок. «Жалобы поступали. Покажите складик.»</p>',
+    choices:[
+      { label:'Дать «на чай» ₽3 000', go:()=>{
+        if (state.cash<3000){ ev_close('Денег на конверт нет. Вас увозят.'); state.over='caught'; checkEndings(); return; }
+        state.cash -= 3000; state.flags.copScammed = 0; ev_close('Деньги ушли в карман — проверка ушла.');
+      }},
+      { label:'Показать всё честно', go:()=>{
+        if (state.scams > 5){ ev_close('Слишком много следов. Вас закрывают.'); state.over='caught'; checkEndings(); return; }
+        state.rep += 6; state.flags.copScammed = 0; ev_close('Чисто. Ушли ни с чем.');
+      }},
+    ]
+  }),
+  VIRAL: ()=>({
+    title:'📸 ВИРУСНЫЙ РИЛС',
+    body:'<p>Видео «как разводят в ларьке» набрало 800k. ТЦ присылает претензию.</p>',
+    choices:[
+      { label:'Купить «отзывы-нейтрализаторы» ₽4 000', go:()=>{
+        if (state.cash<4000){ ev_close('Не хватает денег. Волна накрывает.'); state.rep -= 12; return; }
+        state.cash -= 4000; state.rep += 4; state.flags.bloggerScammed=0; ev_close('SMM-агентство утопило волну.');
+      }},
+      { label:'Игнорировать', go:()=>{ state.rep -= 18; state.flags.bloggerScammed=0; ev_close('Падение репутации. Клиенты косятся.'); }},
+    ]
+  }),
+  BROTHER: ()=>({
+    title:'😤 БРАТ КЛИЕНТА',
+    body:'<p>В ларёк протискивается шкаф 110 кг. «Ты Серого моего развёл? Гони бабло.»</p>',
+    choices:[
+      { label:'Откупиться ₽2 500', go:()=>{
+        if (state.cash<2500){ state.cash = 0; state.rep -= 8; ev_close('Денег не хватило. Получили в ухо.'); return; }
+        state.cash -= 2500; ev_close('Шкаф ушёл довольным.');
+      }},
+      { label:'Звать охрану ТЦ', go:()=>{
+        if (Math.random()<0.5){ state.rep -= 4; ev_close('Охрана пришла. Все на нервах.'); }
+        else { state.cash = Math.max(0,state.cash-1500); state.rep -= 10; ev_close('Охрана опоздала. Касса опустела.'); }
+      }},
+    ]
+  }),
+  JOURNALIST: ()=>({
+    title:'⭐ ЖУРНАЛИСТ',
+    body:'<p>Девушка с диктофоном: «Готовим материал о честных мастерах района».</p>',
+    choices:[
+      { label:'Дать интервью', go:()=>{ state.rep = Math.min(100, state.rep+15); state.cash += 500; ev_close('Статья вышла в районной газете. Поток клиентов.'); }},
+      { label:'«Не комментирую»', go:()=>{ ev_close('Журналистка пожала плечами и ушла.'); }},
+    ]
+  }),
+  TOOL_BREAK: ()=>({
+    title:'🔧 СЛОМАЛСЯ ИНСТРУМЕНТ',
+    body:'<p>Паяльник испустил последний дымок. Без инструмента — никак.</p>',
+    choices:[
+      { label:'Купить новый ₽1 200', go:()=>{
+        if (state.cash<1200){ state.flags.returnsQueued++; state.rep -= 4; ev_close('Денег нет. Чиним руками. Жди возврат.'); return; }
+        state.cash -= 1200; ev_close('Дымит как надо.');
+      }},
+      { label:'Чинить изолентой', go:()=>{ if(Math.random()<0.5){ ev_close('Работает. Пока.'); } else { state.flags.returnsQueued++; state.rep -= 3; ev_close('Сжёг чужой телефон. Возврат на подходе.'); }}},
+    ]
+  }),
+  LUCKY_PART: ()=>({
+    title:'🎁 НАШЁЛ ДЕТАЛЬ',
+    body:'<p>Под верстаком — целый дисплей в упаковке. Совесть подсказывает: продай.</p>',
+    choices:[
+      { label:'Продать ₽1 500', go:()=>{ state.cash += 1500; ev_close('Левый доход. Никто не заметит.'); }},
+      { label:'Оставить на запас', go:()=>{ state.rep += 1; ev_close('Лежит, ждёт своего клиента.'); }},
+    ]
+  }),
+  PETTY_THEFT: ()=>({
+    title:'🥷 МЕЛКАЯ КРАЖА',
+    body:'<p>Пока вы смотрели в телефон, школьник стащил пауэрбанк с витрины.</p>',
+    choices:[
+      { label:'Принять как факт', go:()=>{ state.cash -= 600; ev_close('Минус ₽600. Жизнь.'); }},
+      { label:'Гнать матом', go:()=>{ state.rep -= 2; ev_close('Услышал весь ТЦ.'); }},
+    ]
+  }),
+};
+
+function runEvent(key){
+  const def = EVENTS[key]();
+  $('evTitle').textContent = def.title;
+  $('evBody').innerHTML = def.body;
+  $('evChoices').innerHTML = '';
+  def.choices.forEach(ch=>{
+    const b = document.createElement('button');
+    b.textContent = ch.label;
+    b.onclick = ()=> ch.go();
+    $('evChoices').appendChild(b);
+  });
+  $('event').classList.remove('hidden');
+}
+
+function ev_close(msg){
+  $('evChoices').innerHTML = '';
+  if (msg){
+    $('evBody').innerHTML += `<p style="color:var(--red);margin-top:8px"><b>${msg}</b></p>`;
+  }
+  const b = document.createElement('button');
+  b.className = 'good';
+  b.textContent = 'ДАЛЬШЕ';
+  b.onclick = ()=>{
+    $('event').classList.add('hidden');
+    render();
+    if (!checkEndings()) actuallyNextCustomer();
+  };
+  $('evChoices').appendChild(b);
+  render();
+  save();
+}
+
+// ---------- ENDINGS ----------
+function checkEndings(){
+  if (state.over === 'caught'){
+    return showEnding('caught');
+  }
+  if (state.cash <= -3000){
+    return showEnding('bankrupt');
+  }
+  if (state.debt <= 0 && state.cash >= 0){
+    if (state.scams >= 10) return showEnding('legend');
+    if (state.scams <= 4 && state.rep >= 60) return showEnding('honest');
+    return showEnding('legend');
+  }
+  // auto-pay debt from extra cash
+  if (state.cash > 4000 && state.debt > 0){
+    const pay = Math.min(state.cash - 2000, 1500, state.debt);
+    state.cash -= pay;
+    state.debt = Math.max(0, state.debt - pay);
+  }
+  if (state.scams >= 12 && state.rep < 20){
+    return showEnding('caught');
+  }
+  return false;
+}
+
+const ENDINGS = {
+  honest: {
+    title:'🏆 ЧЕСТНЫЙ МАСТЕР',
+    headline:'«ЛУЧШИЙ МАСТЕР РАЙОНА» — газета «Космос-инфо»',
+    body:'<p>Долг закрыт. Очередь к ларьку — на полтора часа. Через год вы открываете нормальный сервисный центр на втором этаже того же ТЦ.</p><p>Спите спокойно. И впервые за долгое время — высыпаетесь.</p>'
+  },
+  legend: {
+    title:'💰 ЛЕГЕНДА РАЗВОДА',
+    headline:'«В ТЦ "КОСМОС" НАКРЫЛИ ПОДПОЛЬНЫЙ СЕРВИС»',
+    body:'<p>Долг закрыт. На счёте — солидно. На столе у следователя — ваше дело и стопка чеков, написанных ручкой на салфетках.</p><p>Вы стали локальной легендой. Имя ваше — нарицательное. Подписчиков — тысячи. Свободы — нет.</p>'
+  },
+  caught: {
+    title:'🚔 ПОПАЛСЯ',
+    headline:'«ХУДШИЙ МАСТЕР ГОДА УЕХАЛ В МЕСТА НЕ СТОЛЬ ОТДАЛЁННЫЕ»',
+    body:'<p>Слишком много жалоб, один обиженный мент и блогер с миллионом подписчиков. Этой комбинации не пережил никто.</p><p>Игра окончена.</p>'
+  },
+  bankrupt: {
+    title:'🏚 БАНКРОТ',
+    headline:'«ПАВИЛЬОН 47Б ОПЕЧАТАН ЗА ДОЛГИ»',
+    body:'<p>Аренда не плачена, касса в минусе. Хозяин ТЦ молча выносит ваш паяльник за дверь.</p><p>Долг остался. Ларька — нет.</p>'
+  }
+};
+
+function showEnding(key){
+  state.over = key;
+  const e = ENDINGS[key];
+  $('endTitle').textContent = e.title;
+  $('endLine').innerHTML = `<span class="ttl">${e.headline}</span>Дней отработано: ${state.day} · клиентов: ${state.served} · разводов: ${state.scams} · репутация: ${Math.round(state.rep)}.`;
+  $('endBody').innerHTML = e.body;
+  $('ending').classList.remove('hidden');
+  wipe();
+  return true;
+}
+
+// ---------- OUTCOME MODAL ----------
+let outcomeAfter = null;
+function showOutcome(o){
+  $('outTitle').textContent = o.title;
+  $('outBody').innerHTML = o.body;
+  outcomeAfter = o.after || null;
+  $('outcome').classList.remove('hidden');
+  render();
+}
+$('outNext').onclick = ()=>{
+  $('outcome').classList.add('hidden');
+  const fn = outcomeAfter; outcomeAfter = null;
+  if (fn) fn();
+};
+
+// ---------- SHOP ----------
+function renderShop(){
+  const list = $('upgList');
+  list.innerHTML = '';
+  UPGRADES.forEach(u=>{
+    const owned = !!state.upgrades[u.id];
+    const div = document.createElement('div');
+    div.className = 'upg';
+    div.innerHTML = `<div style="flex:1"><b>${u.name}</b> — ${fmt(u.cost)}<br><span style="font-family:Caveat;font-size:18px;line-height:1.1">${u.desc}</span></div>`;
+    const b = document.createElement('button');
+    b.className = 'btnSmall';
+    b.textContent = owned ? 'КУПЛЕНО' : 'КУПИТЬ';
+    b.disabled = owned || state.cash < u.cost;
+    b.style.opacity = b.disabled ? .5 : 1;
+    b.onclick = ()=>{
+      if (state.cash < u.cost) return;
+      state.cash -= u.cost;
+      state.upgrades[u.id] = true;
+      if (u.id==='fake_reviews') state.rep = Math.min(100, state.rep + 10);
+      render(); renderShop(); save();
+    };
+    div.appendChild(b);
+    list.appendChild(div);
+  });
+}
+$('shopBtn').onclick = ()=>{ if(!state) return; renderShop(); $('shop').classList.remove('hidden'); };
+$('shopClose').onclick = ()=> $('shop').classList.add('hidden');
+
+// ---------- TICKER ----------
+function buildTicker(){
+  const reviews = REVIEWS.slice().sort(()=>Math.random()-0.5).concat(REVIEWS).join('   •   ');
+  $('tape').textContent = reviews;
+}
+
+// ---------- INTRO / RESET ----------
+$('startBtn').onclick = ()=>{
+  state = freshState();
+  $('intro').classList.add('hidden');
+  buildTicker();
+  render();
+  actuallyNextCustomer();
+};
+$('continueBtn').onclick = ()=>{
+  $('intro').classList.add('hidden');
+  buildTicker();
+  render();
+  if (!state.customer) actuallyNextCustomer();
+  else { showCustomer(); startMinigame(); }
+};
+$('resetBtn').onclick = ()=>{
+  if (confirm('Сбросить сохранение и начать заново?')){
+    wipe(); location.reload();
+  }
+};
+$('endRestart').onclick = ()=>{ wipe(); location.reload(); };
+
+// ---------- BOOT ----------
+(function boot(){
+  buildTicker();
+  if (load() && !state.over){
+    $('continueBtn').style.display = '';
+    // also keep state visible behind intro
+    render();
+  } else {
+    state = null;
+  }
+})();
+
+</script>
+</body>
+</html>
