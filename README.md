@@ -72,20 +72,29 @@ What is the purpose of the project:
 <h2 align="center">Screenshots</h2>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/f14b774f-f356-4ebe-ac25-c286ed4bc0ba" width="250">
-  <img src="https://github.com/user-attachments/assets/0a8f536d-2227-4240-830c-ec208c1fb9dc" width="250">
-  <img src="https://github.com/user-attachments/assets/534fbc1a-0925-4da8-bfb3-edb7ac0797a7" width="250">
+  <img src="https://github.com/user-attachments/assets/7d22e962-0544-42ed-a9ff-80c7cbdc115b" width="250" />
+  <img src="https://github.com/user-attachments/assets/cf32a216-db60-4d8e-8b4b-2ab3c001f839" width="250" />
+  <img src="https://github.com/user-attachments/assets/ef85749b-d1c5-4d28-afc3-1eaa46f267c1" width="250" />
+
 </p>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/943c745b-f867-4bc0-a9c8-ce88040292d7" width="250">
-  <img src="https://github.com/user-attachments/assets/a7f80ebc-b9f4-4d36-9561-c60123cb9c72" width="250">
-  <img src="https://github.com/user-attachments/assets/cd8d8b38-1cd7-498d-b947-9a6ef8625819" width="250">
+  <img src="https://github.com/user-attachments/assets/d6c92ca4-a000-49b4-abcf-5bc0e2315b27" width="250" />
+  <img src="https://github.com/user-attachments/assets/43c245bd-7627-4894-b9d4-ae79d7ce0d21" width="250" />
+  <img src="https://github.com/user-attachments/assets/cbb8a58d-101e-4725-8526-8d17b5cdef6e" width="250" />
+
 </p>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/f648c222-462b-40a8-9029-0729e45dd017" width="250">
-  <img src="https://github.com/user-attachments/assets/ee1dd6e2-d280-4d8d-b7cd-edd317937491" width="250">
-  <img src="https://github.com/user-attachments/assets/b731c720-3e10-4561-a342-dddb8da9dca6" width="250">
+
+<img src="https://github.com/user-attachments/assets/26cfcb3c-2ecf-4d91-b376-52b010c1fcbb" width="250" />
+<img src="https://github.com/user-attachments/assets/5a094451-4820-4d8a-ad1a-197a045092a5" width="250" />
+<img src="https://github.com/user-attachments/assets/dd1dd89d-41c3-4ba7-83e6-ecbdafec3a1f" width="250" />
+
+
+
+
+
+   
 </p>
 
